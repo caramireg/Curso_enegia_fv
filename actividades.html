@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actividades Prácticas - Jóvenes Ingenieros Solares</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; padding: 1rem; }
+        .container { max-width: 900px; margin: 2rem auto; background-color: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2 { color: #1e3a8a; text-align: center; }
+        h1 { font-size: 2.25rem; font-weight: 800; }
+        h2 { font-size: 1.5rem; font-weight: 700; margin-top: 2.5rem; border-bottom: 2px solid #dbeafe; padding-bottom: 0.5rem; }
+        .back-button { display: inline-flex; align-items: center; padding: 0.5rem 1rem; background-color: #475569; color: white; border-radius: 0.5rem; text-decoration: none; font-weight: 500; margin-bottom: 1.5rem; }
+        .activity-wrapper { margin-top: 1.5rem; padding: 1.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; background-color: #f8fafc; }
+        .activity-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .activity-description { color: #475569; text-align: center; margin-bottom: 1.5rem; }
+        .quiz-question { font-weight: 600; color: #1d4ed8; margin-bottom: 1rem; }
+        .quiz-options button { display: block; width: 100%; background-color: white; border: 2px solid #93c5fd; padding: 0.75rem; margin-top: 0.5rem; border-radius: 0.5rem; cursor: pointer; text-align: left; transition: all 0.2s; }
+        .quiz-options button.correct { background-color: #dcfce7; border-color: #4ade80; }
+        .quiz-options button.incorrect { background-color: #fee2e2; border-color: #f87171; }
+        .quiz-options button:disabled { cursor: not-allowed; font-weight: bold; }
+        .feedback { margin-top: 0.5rem; font-weight: bold; text-align: right; height: 1.5rem; }
+        .reset-btn { background-color: #64748b; color: white; border: none; padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 4px; cursor: pointer; }
+        .dd-container { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; align-items: flex-start; }
+        .dd-items, .dd-zones { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; padding: 0.5rem; }
+        .dd-items { width: 100%; }
+        .drag-item { width: 80px; height: 80px; padding: 0.5rem; background-color: white; border-radius: 0.5rem; cursor: grab; display: flex; justify-content: center; align-items: center; }
+        .drag-item img { max-width: 90%; max-height: 90%; pointer-events: none; }
+        .drop-zone { width: 140px; height: 120px; border: 2px dashed #93c5fd; border-radius: 0.5rem; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .drop-zone.over { background-color: #dbeafe; }
+        .drop-zone.correct { background-color: #dcfce7; border-style: solid; border-color: #4ade80; }
+        .memory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; }
+        .memory-card { background-color: #93c5fd; height: 100px; border-radius: 0.5rem; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.5s; }
+        .memory-card .front, .memory-card .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; justify-content: center; align-items: center; text-align: center; padding: 0.5rem; font-size: 0.85rem; }
+        .memory-card .back { background-color: #e0f2fe; color: #1e3a8a; transform: rotateY(180deg); }
+        .memory-card.flipped { transform: rotateY(180deg); }
+        .memory-card.matched { transform: rotateY(180deg); background-color: #dcfce7; border: 2px solid #4ade80; cursor: default; }
+        .single-calc-container { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 1rem; }
+        .single-calc-container input { width: 120px; padding: 0.5rem; border: 1px solid #93c5fd; border-radius: 4px; }
+        .single-calc-container button { margin: 0; padding: 0.5rem 1rem; font-size: 1rem; background-color: #3b82f6; border:none; color:white; }
+        #finalize-btn { background-color: #16a34a; font-size: 1.25rem; padding: 1rem 2rem; border-radius: 0.5rem; color: white; border: none; }
+        #certificate { border: 10px solid #1e3a8a; background-color: #f1f5f9; padding: 2rem; text-align: center; margin-top: 2rem; }
+        #certificate h1 { font-size: 2rem; } #certificate h2 { font-size: 1rem; border: none; } #certificate .student-name { font-size: 2.5rem; color: #1d4ed8; margin: 2rem 0; font-family: 'Brush Script MT', cursive; }
+        #certificate .course-name { font-size: 1.2rem; } #certificate .date { margin-top: 2rem; font-size: 0.9rem; }
+        .print-btn { background-color: #007bff; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 5px; cursor: pointer; margin-top: 1.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-button">
+             Volver al Curso
+        </a>
+        <h1>Actividades Prácticas</h1>
+        <div id="activities-container"></div>
+        <div style="margin-top: 3rem; text-align: center;">
+            <button id="finalize-btn">¡Finalizar y Calificar!</button>
+        </div>
+        <div id="certificate-container"></div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const activitiesData = [
+        { type: 'quiz', title: "🧠 Quiz Rápido", description: "Selecciona la respuesta correcta para cada pregunta.",
+            questions: [
+                { question: "¿Qué partícula de luz inicia el efecto fotovoltaico?", options: [{ text: "Electrón" }, { text: "Fotón", correct: true }, { text: "Protón" }] },
+                { question: "¿Qué componente protege a las baterías de sobrecargas?", options: [{ text: "Inversor" }, { text: "Regulador de Carga", correct: true }, { text: "Panel Solar" }] }
+            ]
+        },
+        { type: 'drag-drop', title: "Clasifica los Componentes", description: "Arrastra cada componente a su caja correspondiente.",
+            components: [
+                { id: 'panel', name: 'Panel Solar', img: 'images/components/panel.png' },
+                { id: 'bateria', name: 'Batería', img: 'images/components/bateria.png' },
+                { id: 'inversor', name: 'Inversor', img: 'images/components/inversor.png' },
+                { id: 'controlador', name: 'Controlador', img: 'images/components/controlador.png' }
+            ]
+        },
+        { type: 'single-calc', title: "⚡ Cálculo Rápido", description: "Calcula la energía consumida por el siguiente aparato.",
+            question: "Una consola de 200W se usa 3 horas. ¿Cuál es su consumo en Vatios-hora (Wh)?",
+            correctAnswer: 600
+        },
+        { type: 'myth-buster', title: "👻 Mito o Realidad", description: "Haz clic en la afirmación para descubrir si es un mito o una realidad.",
+            statement: "Los paneles solares no funcionan en días fríos.", isMyth: true,
+            explanation: "¡MITO! El frío incluso mejora la eficiencia de los paneles. Lo que necesitan es luz, no calor."
+        },
+        { type: 'memory-game', title: "🃏 Juego de Memoria", description: "Encuentra las parejas de términos y sus definiciones.",
+            pairs: [
+                { id: 1, term: 'Voc', definition: 'Voltaje MÁXIMO de un panel sin carga.' },
+                { id: 2, term: 'DoD', definition: 'Profundidad de Descarga de una batería.' },
+                { id: 3, term: 'MPPT', definition: 'Controlador que optimiza la potencia.' },
+                { id: 4, term: 'kWh', definition: 'Medida de CONSUMO de energía.' }
+            ]
+        }
+    ];
+
+    const activitiesContainer = document.getElementById('activities-container');
+    let score = 0;
+    let totalQuestions = 0;
+
+    function renderActivity(activity, container) {
+        container.innerHTML = `<div class="activity-header"><h2>${activity.title}</h2><button class="reset-btn">Reiniciar</button></div><p class="activity-description">${activity.description}</p>`;
+        const contentDiv = document.createElement('div');
+        container.appendChild(contentDiv);
+        container.querySelector('.reset-btn').addEventListener('click', () => {
+             const newContainer = container.cloneNode(false);
+             container.parentNode.replaceChild(newContainer, container);
+             renderActivity(activity, newContainer);
+        });
+
+        if (activity.type === 'quiz') {
+            activity.questions.forEach(q => {
+                totalQuestions++;
+                const item = document.createElement('div'); item.className = 'quiz-item';
+                item.innerHTML = `<p class="quiz-question">${q.question}</p>`;
+                const optionsDiv = document.createElement('div'); optionsDiv.className = 'quiz-options';
+                const feedback = document.createElement('div'); feedback.className = 'feedback';
+                q.options.forEach(opt => {
+                    const btn = document.createElement('button'); btn.className = 'quiz-option'; btn.textContent = opt.text;
+                    if (opt.correct) btn.dataset.correct = true;
+                    optionsDiv.appendChild(btn);
+                });
+                item.append(optionsDiv, feedback); contentDiv.appendChild(item);
+                
+                optionsDiv.addEventListener('click', e => {
+                    if (e.target.tagName === 'BUTTON' && !optionsDiv.dataset.answered) {
+                        optionsDiv.dataset.answered = 'true';
+                        const isCorrect = e.target.dataset.correct;
+                        if(isCorrect) { score++; feedback.textContent = '¡Correcto! ✅'; feedback.style.color = 'green'; }
+                        else { feedback.textContent = 'Incorrecto.'; feedback.style.color = 'red'; }
+                        e.target.classList.add(isCorrect ? 'correct' : 'incorrect');
+                    }
+                });
+            });
+        }
+
+        if (activity.type === 'drag-drop') {
+            totalQuestions++; let correctDrops = 0;
+            const ddContainer = document.createElement('div'); ddContainer.className = 'dd-container';
+            const itemsDiv = document.createElement('div'); itemsDiv.className = 'dd-items';
+            const zonesDiv = document.createElement('div'); zonesDiv.className = 'dd-zones';
+            
+            activity.components.forEach(comp => {
+                itemsDiv.innerHTML += `<div id="${comp.id}-${Date.now()}" class="drag-item" draggable="true" data-id="${comp.id}"><img src="${comp.img}" alt="${comp.name}"></div>`;
+                zonesDiv.innerHTML += `<div class="drop-zone" data-accepts="${comp.id}"><p>${comp.name}</p></div>`;
+            });
+            ddContainer.append(itemsDiv, zonesDiv); contentDiv.appendChild(ddContainer);
+
+            ddContainer.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', e.target.id));
+            zonesDiv.addEventListener('dragover', e => { e.preventDefault(); e.target.closest('.drop-zone')?.classList.add('over'); });
+            zonesDiv.addEventListener('dragleave', e => e.target.closest('.drop-zone')?.classList.remove('over'));
+            zonesDiv.addEventListener('drop', e => {
+                e.preventDefault();
+                const dropZone = e.target.closest('.drop-zone');
+                if (!dropZone) return; dropZone.classList.remove('over');
+                const draggedId = e.dataTransfer.getData('text/plain');
+                const draggedEl = document.getElementById(draggedId);
+                if (!dropZone.querySelector('.drag-item') && dropZone.dataset.accepts === draggedEl.dataset.id) {
+                    draggedEl.style.cursor = 'default'; dropZone.appendChild(draggedEl); dropZone.classList.add('correct');
+                    correctDrops++;
+                    if (correctDrops === activity.components.length) score++;
+                }
+            });
+        }
+        
+        if (activity.type === 'single-calc') {
+            totalQuestions++;
+            contentDiv.innerHTML = `<p class="quiz-question">${activity.question}</p><div class="single-calc-container"><input type="number" id="calc-answer" placeholder="Respuesta en Wh"><button id="verify-calc-btn">Verificar</button></div><div class="feedback" style="text-align:center;"></div>`;
+            contentDiv.querySelector('#verify-calc-btn').addEventListener('click', (e) => {
+                const userAnswer = parseFloat(contentDiv.querySelector('#calc-answer').value);
+                const feedback = contentDiv.querySelector('.feedback');
+                if (Math.abs(userAnswer - activity.correctAnswer) < 1) {
+                    score++; feedback.textContent = '¡Cálculo Correcto! ✅'; feedback.style.color = 'green';
+                } else {
+                    feedback.textContent = `Casi. La fórmula es: Potencia (W) × Tiempo (h)`; feedback.style.color = 'red';
+                }
+                e.target.disabled = true;
+            });
+        }
+
+        if (activity.type === 'myth-buster') {
+            totalQuestions++;
+            const button = document.createElement('button'); button.className = 'quiz-option'; button.textContent = activity.statement;
+            const feedback = document.createElement('div'); feedback.className = 'feedback';
+            contentDiv.append(button, feedback);
+            button.addEventListener('click', () => {
+                score++; // Se da el punto por interactuar y aprender
+                button.classList.add(activity.isMyth ? 'incorrect' : 'correct');
+                feedback.textContent = activity.explanation; feedback.style.color = '#1d4ed8';
+                button.disabled = true;
+            }, { once: true });
+        }
+        
+        if (activity.type === 'memory-game') {
+            totalQuestions++;
+            const grid = document.createElement('div'); grid.className = 'memory-grid'; contentDiv.appendChild(grid);
+            let firstCard = null, lockBoard = false, matchedPairs = 0;
+
+            [...activity.pairs, ...activity.pairs].sort(() => 0.5 - Math.random()).forEach(item => {
+                const card = document.createElement('div'); card.className = 'memory-card'; card.dataset.pairId = item.id;
+                const text = item.term || item.definition;
+                card.innerHTML = `<div class="front"></div><div class="back">${text}</div>`;
+                grid.appendChild(card);
+                
+                card.addEventListener('click', () => {
+                    if (lockBoard || card.classList.contains('flipped')) return;
+                    card.classList.add('flipped');
+                    if (!firstCard) { firstCard = card; return; }
+                    lockBoard = true;
+                    if (firstCard.dataset.pairId === card.dataset.pairId) {
+                        firstCard.classList.add('matched'); card.classList.add('matched'); matchedPairs++;
+                        if (matchedPairs === activity.pairs.length) score++;
+                        [firstCard, lockBoard] = [null, false];
+                    } else {
+                        setTimeout(() => {
+                            firstCard.classList.remove('flipped'); card.classList.remove('flipped');
+                            [firstCard, lockBoard] = [null, false];
+                        }, 1200);
+                    }
+                });
+            });
+        }
+    }
+
+    // --- RENDERIZADO INICIAL DE TODAS LAS ACTIVIDADES ---
+    activitiesData.forEach(activity => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'activity-wrapper';
+        renderActivity(activity, wrapper);
+        activitiesContainer.appendChild(wrapper);
+    });
+
+    // --- LÓGICA DE FINALIZACIÓN Y CERTIFICADO ---
+    document.getElementById('finalize-btn').addEventListener('click', () => {
+        const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
+        if (percentage >= 80) {
+            const studentName = prompt(`¡Felicidades! Aprobaste con un ${percentage.toFixed(0)}%. Ingresa tu nombre completo para el certificado:`, "Nombre del Estudiante");
+            if (studentName && studentName.trim() !== "") {
+                generateCertificate(studentName);
+            }
+        } else {
+            alert(`Tu puntaje fue de ${percentage.toFixed(0)}%. ¡Sigue practicando! Puedes usar los botones de 'Reiniciar' e intentarlo de nuevo.`);
+        }
+    });
+
+    function generateCertificate(name) {
+        const certificateContainer = document.getElementById('certificate-container');
+        const today = new Date();
+        const dateString = today.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+        certificateContainer.innerHTML = `
+            <div id="certificate">
+                <h2 class="certificate-subtitle">La Tecno Academia de Manizales otorga este</h2>
+                <h1 class="certificate-title">Certificado de Finalización</h1>
+                <p class="certificate-subtitle" style="margin-top:1rem;">a:</p>
+                <p class="student-name">${name}</p>
+                <p class="course-name">Por haber completado satisfactoriamente el curso y las actividades de:</p>
+                <p class="course-name"><strong>Conceptos Básicos de Energía Solar Fotovoltaica</strong></p>
+                <p class="date">Emitido en Manizales, el ${dateString}</p>
+                <button onclick="window.print()" class="print-btn">Imprimir Certificado</button>
+            </div>
+        `;
+        activitiesContainer.style.display = 'none';
+        document.getElementById('finalize-btn').style.display = 'none';
+    }
+});
+</script>
+</body>
+</html>

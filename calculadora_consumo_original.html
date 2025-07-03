@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Consumo Eléctrico Múltiple</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { opacity: 1; }
+        .appliance-button {
+            border: 2px solid transparent; transition: all 0.2s ease-in-out;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; height: 110px; background-color: #f9fafb; border-color: #e5e7eb;
+        }
+        .appliance-button img { max-height: 45px; margin-bottom: 0.4rem; object-fit: contain; }
+        .appliance-button span { font-size: 0.7rem; line-height: 1.1; color: #4b5563; }
+        .appliance-button.selected {
+            border-color: #4f46e5; background-color: #e0e7ff; transform: scale(1.03);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .appliance-button.selected span { font-weight: 600; color: #3730a3; }
+        #appliance-list { background-color: #f8fafc; min-height: 100px; max-height: 250px; overflow-y: auto; }
+        .appliance-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-bottom: 1px dashed #e2e8f0; font-size: 0.85rem; }
+        .appliance-item:last-child { border-bottom: none; }
+        .remove-appliance-btn {
+            background-color: #ef4444; color: white; border: none; border-radius: 50%;
+            width: 20px; height: 20px; font-size: 12px; line-height: 18px; cursor: pointer;
+            padding: 0; margin-left: 0.5rem; flex-shrink: 0;
+        }
+        .remove-appliance-btn:hover { background-color: #dc2626; }
+        #empty-list-msg { color: #6b7280; font-style: italic; text-align: center; padding: 1rem; }
+        #total-results { background-color: #e0f2fe; border-color: #7dd3fc; }
+        #total-results h2 { color: #0369a1; }
+        #total-results .result-item span { color: #075985; }
+        #total-results .result-item span:last-child { color: #0c4a6e; }
+        .logo-img { height: 100px; width: auto; object-fit: contain; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <header class="w-full max-w-4xl mb-6 px-4">
+        <div class="flex justify-between items-center bg-white p-3 rounded-lg shadow-md">
+            <!-- Updated image paths for logos -->
+            <img src="images/logo_sena.jpg" alt="Logo SENA" class="logo-img" onerror="this.alt='Logo SENA no encontrado'; this.src='https://placehold.co/150x100/00324D/FFFFFF?text=Logo+SENA';">
+            <img src="images/logo_semillero.png" alt="Logo Semillero de Investigación" class="logo-img" onerror="this.alt='Logo Semillero no encontrado'; this.src='https://placehold.co/150x100/39A900/FFFFFF?text=Logo+Semillero';">
+        </div>
+    </header>
+
+    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg w-full max-w-4xl">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6">Calculadora de Consumo Eléctrico Múltiple</h1>
+        <p class="text-center text-gray-600 mb-8">Añade electrodomésticos a la lista y calcula el consumo total.</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Selecciona un Electrodoméstico:</label>
+                    <div id="appliance-buttons" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="power" class="block text-sm font-medium text-gray-700 mb-1">Potencia (W):</label>
+                        <input type="number" id="power" name="power" placeholder="Ej: 100" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="hours" class="block text-sm font-medium text-gray-700 mb-1">Horas uso/día:</label>
+                        <input type="number" id="hours" name="hours" placeholder="Ej: 3" min="0" max="24" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="days" class="block text-sm font-medium text-gray-700 mb-1">Días uso/mes:</label>
+                        <input type="number" id="days" name="days" value="30" min="1" max="31" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <button id="add-appliance-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                            Añadir a la Lista
+                        </button>
+                        <p id="add-error-message" class="mt-2 text-sm text-red-600 font-medium hidden"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lista de Electrodomésticos Añadidos:</label>
+                    <div id="appliance-list" class="border rounded-md p-3">
+                        <p id="empty-list-msg">La lista está vacía.</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Precio por kWh ($):</label>
+                    <input type="number" id="price" name="price" value="850" min="0" step="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <p class="mt-1 text-xs text-gray-500">Valor aprox. COP en Manizales (Junio 2025).</p>
+                </div>
+
+                <button id="calculate-total-btn" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out" disabled>
+                    Calcular Consumo Total
+                </button>
+
+                <div id="total-results" class="p-4 rounded-lg border hidden self-start">
+                    <h2 class="text-lg font-semibold mb-3 text-center">Resultados Totales Estimados:</h2>
+                    <div class="space-y-3 text-sm">
+                        <p class="flex justify-between result-item"><span>Consumo Diario Total:</span> <span id="total-daily-kwh" class="font-bold">--</span> kWh</p>
+                        <p class="flex justify-between result-item"><span>Consumo Mensual Total:</span> <span id="total-monthly-kwh" class="font-bold">--</span> kWh</p>
+                        <p class="flex justify-between result-item"><span>Costo Mensual Total Estimado:</span> <span id="total-monthly-cost" class="font-bold">$--</span> COP</p>
+                    </div>
+                    <p id="total-error-message" class="mt-4 text-sm text-red-600 font-medium hidden text-center"></p>
+                    <div id="continue-button-container" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Wrap the entire script in DOMContentLoaded to ensure elements are loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const applianceButtonsDiv = document.getElementById('appliance-buttons');
+            const powerInput = document.getElementById('power');
+            const hoursInput = document.getElementById('hours');
+            const daysInput = document.getElementById('days');
+            const priceInput = document.getElementById('price');
+            const addBtn = document.getElementById('add-appliance-btn');
+            const applianceListDiv = document.getElementById('appliance-list');
+            const emptyListMsg = document.getElementById('empty-list-msg');
+            const calculateTotalBtn = document.getElementById('calculate-total-btn');
+            const totalResultsDiv = document.getElementById('total-results');
+            const totalDailyKwhSpan = document.getElementById('total-daily-kwh');
+            const totalMonthlyKwhSpan = document.getElementById('total-monthly-kwh');
+            const totalMonthlyCostSpan = document.getElementById('total-monthly-cost');
+            const addErrorMessageP = document.getElementById('add-error-message');
+            const totalErrorMessageP = document.getElementById('total-error-message');
+            const continueButtonContainer = document.getElementById('continue-button-container');
+
+            const appliancesData = {
+                'Nevera': { wattage: 150, imageUrl: "https://mercaldas.vtexassets.com/arquivos/ids/1307820/Nevera-HACEB-Himalaya-428-litros-no-frost_123371-1.jpg?v=638194265310900000" },
+                'TV LED 40"': { wattage: 50, imageUrl: "https://exitocol.vtexassets.com/arquivos/ids/27117616/Tv-Led-101-Cm-40-Fhd-Smart-SAMSUNG-40-Pulgadas-Smart-Tv-UN40T5290AKXZL-3041953_a.jpg?v=638786893272770000" },
+                'Bombillo LED': { wattage: 10, imageUrl: "https://imagedelivery.net/4fYuQyy-r8_rpBpcY7lH_A/sodimacCO/429126/w=1036,h=832,f=webp,fit=contain,q=85" },
+                'Portatil': { wattage: 50, imageUrl: "https://m.media-amazon.com/images/I/61uX-zajiXL._AC_SY300_.jpg" },
+                'PC Torre': { wattage: 250, imageUrl: "https://http2.mlstatic.com/D_NQ_NP_697352-MCO83943899727_042025-O.webp" },
+                'Cargador Cel': { wattage: 5, imageUrl: "https://andinotec.com/wp-content/uploads/2021/01/11481.jpg" },
+                'PS5': { wattage: 200, imageUrl: "https://http2.mlstatic.com/D_NQ_NP_821666-MLA74019269225_012024-O.webp" },
+                'Xbox X': { wattage: 170, imageUrl: "https://i5.walmartimages.com/seo/Microsoft-Xbox-Series-X-1TB-Console-Black_1f5923d8-94e6-48f8-8301-b03f11c49a9c.0d0f57d0b6998726b61d157ae17eeb3c.jpeg" },
+                'Cafetera': { wattage: 1000, imageUrl: "https://m.media-amazon.com/images/I/61oCzQ33FXL._AC_SX679_.jpg" },
+                'Arrocera': { wattage: 500, imageUrl: "https://www.alkosto.com/medias/034264488014-001-750Wx750H?context=bWFzdGVyfGltYWdlc3wxMTE1NHxpbWFnZS92dGV4dGV4dHVyZXN8MTE1NHxhR1ZtTDJoaFl5OHhOREkzTWpZMk5EUjFNVEV3TWk4d016UXlOalEwT0Rnd01UUmZNRFF4WHpjMU1GZDRNekV3U0F8YWIyOGVkMWE1MzEzODU5NzY3MGQzMzQwMmUxOGMxZTcyY2ZmNjJhN2RiMTFkNzBkNThiNmViZGZkMjY3ZTFlYg" },
+                'Microondas': { wattage: 1100, imageUrl: "https://www.ktronix.com/medias/7704353392579-001-750Wx750H?context=bWFzdGVyfGltYWdlc3wxMzU2OHxpbWFnZS92dGV4dGV4dHVyZXN8MTM1Njh8YUdXd0wyaHdPQzh4TkRjNU56ZzNOVEk0TVRrMU1DODNOekEwTXpVeU5qa3lOVGMyWHpBd01WODNOVEJYZURjMU1FZ3xibWNmMzcxNmRhMWE2ZDhiNzQzYzdiZjY2ZjE4YjM3ZTk4NzMwZDVlOWJkNWM2MmU5YWVkZTRmYTM1Y2ZkNTliNQ" },
+                'Lavadora': { wattage: 500, imageUrl: "https://imagedelivery.net/4fYuQyy-r8_rpBpcY7lH_A/sodimacCO/545085/w=1036,h=832,f=webp,fit=contain,q=85" },
+                'Secadora Ropa': { wattage: 3000, imageUrl: "https://www.ktronix.com/medias/8806090586996-001-750Wx750H?context=bWFzdGVyfGltYWdlc3wxNTczMHxpbWFnZS92dGV4dGV4dHVyZXN8MTU3MzB8YUdNeExtZzBPUzh4TkRVNE16QTRPVEEzTURFeE1DODRPREEyTURrd05UazJYMlF3TVY4M05UQlhjRGMxTUVnfDFlOGYzNzQwZGM0YjViYTE5YWFhZjY4MmIyMDM3NDVjYTM5MGM2NGIyOWY4N2YxZDQ1NTljY2UzNDI2YzdhNzFm" },
+                'Plancha Ropa': { wattage: 1200, imageUrl: "https://m.media-amazon.com/images/I/71KnerysbNL._AC_SY300_.jpg" },
+                'Plancha Pelo': { wattage: 50, imageUrl: "https://m.media-amazon.com/images/I/6186mp+WR4L._AC_SX569_.jpg" },
+                'Secador Pelo': { wattage: 1500, imageUrl: "https://m.media-amazon.com/images/I/31IkIcXh68L._SY445_SX342_QL70_FMwebp_.jpg" },
+                'Ducha Elec.': { wattage: 4500, imageUrl: "https://http2.mlstatic.com/D_NQ_NP_656190-MCO44107524572_112020-O.webp" },
+                'Horno Elec.': { wattage: 2500, imageUrl: "https://imagedelivery.net/4fYuQyy-r8_rpBpcY7lH_A/sodimacCO/234457/w=1036,h=832,f=webp,fit=contain,q=85" },
+                'Licuadora': { wattage: 400, imageUrl: "https://http2.mlstatic.com/D_NQ_NP_675341-MCO74915650440_032024-O.webp" },
+                'Equipo Sonido': { wattage: 100, imageUrl: "https://www.ktronix.com/medias/885170338036-001-750Wx750H?context=bWFzdGVyfGltYWdlc3wyMjQwMnxpbWFnZS9qcGVnfGFXMWhaMlZ6TDJnNE9DOW9NRGt2T1RBMk56WXhNVEUyTURZd05pNXFjR2N8YzA0NjVhYjdiOWUyNDIyNzI1YWEwMDJkNTg4MjY0ZGY3NDdiNWUzYTI2MWUwMjYwYmIzZjU2MTkzYmY0N2FlMQ" },
+                'Estufa Elec (P)': { wattage: 1000, imageUrl: "https://homeelements.vtexassets.com/arquivos/ids/157583/299896722_1.jpg?v=638797251697870000" },
+                'Estufa Elec (M)': { wattage: 2000, imageUrl: "https://homeelements.vtexassets.com/arquivos/ids/157583/299896722_1.jpg?v=638797251697870000" },
+                'Estufa Elec (G)': { wattage: 4000, imageUrl: "https://homeelements.vtexassets.com/arquivos/ids/157583/299896722_1.jpg?v=638797251697870000" },
+                'Aire Acond.': { wattage: 1200, imageUrl: "https://www.ktronix.com/medias/7705946479981-001-750Wx750H?context=bWFzdGVyfGltYWdlc3w0MzkwfGltYWdlL3dlYnB8YURRNUwyaGpOaTh4TlRBMk5EVTRORFU0TlRJME5pODNOekExT1RRMk5EYzVPVGd4WHpBd01WODNOVEJYZURjMU1FZ3wxZTM1Nzk4MGQ3YWI1YmExOWFhZjY4MmIyMDM3NDVjYTM5MGM2NGIyOWY4N2YxZDQ1NTljY2UzNDI2YzdhNzFm" },
+                'Sanduchera': { wattage: 800, imageUrl: "https://olimpica.vtexassets.com/arquivos/ids/1482861-800-auto?v=638611669950030000&width=800&height=auto&aspect=true" },
+                'Modem': { wattage: 10, imageUrl: "https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcQpWsWMcdAHpTC8Gj82oh9CouwEXfWt5BGjYHb0fzWYeB1XEXCASdDSPW-yj9fQ__yfRTO33rh7Ym6maGNFJrMYtiPanLhQkDWFM7i4CNG2pHu641Y6pG2zoSYWE6Tm71-sVZDFxA&usqp=CAc" },
+                'Router': { wattage: 10, imageUrl: "https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcQpWsWMcdAHpTC8Gj82oh9CouwEXfWt5BGjYHb0fzWYeB1XEXCASdDSPW-yj9fQ__yfRTO33rh7Ym6maGNFJrMYtiPanLhQkDWFM7i4CNG2pHu641Y6pG2zoSYWE6Tm71-sVZDFxA&usqp=CAc" },
+                'Aspiradora': { wattage: 1000, imageUrl:"https://blackanddeckerco.vtexassets.com/arquivos/ids/155395-800-auto?v=637841196630800000&width=800&height=auto&aspect=true" },
+                'Batidora': { wattage: 250, imageUrl: "https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRbALpV1-qtfOm79PvPWX2f-1ouzl_SiVuUwOa2tsUxW8y3u_P4FW050aOiRzeVJ_Rosv9fwnBKjc-Mj4lSHEEtxPNDsdPqjhlgDrOjGhEKH3G_lx9q90l4CpOBTBJUM5oJbMKgzd0&usqp=CAc" },
+                'DVD Player': { wattage: 15, imageUrl: "https://m.media-amazon.com/images/I/71BwXgHYcVL.jpg" },
+                'Otro': { wattage: '', imageUrl: "https://placehold.co/60x50/e2e8f0/64748b?text=+" }
+            };
+
+            let addedAppliances = [];
+            let nextItemId = 0;
+            let selectedApplianceName = '';
+
+            const formatNumber = (num, decimals) => num.toLocaleString('es-CO', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+            const formatCurrency = (num) => num.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+            function generateApplianceButtons() {
+                applianceButtonsDiv.innerHTML = '';
+                for (const name in appliancesData) {
+                    const data = appliancesData[name];
+                    const button = document.createElement('button');
+                    button.classList.add('appliance-button', 'p-2', 'rounded-lg', 'border', 'shadow-sm', 'hover:shadow-md', 'transform-hover', 'transition', 'duration-200');
+                    button.setAttribute('data-name', name);
+                    button.setAttribute('data-wattage', data.wattage);
+                    const img = document.createElement('img');
+                    img.src = data.imageUrl || `https://placehold.co/60x50/e0e7ff/4f46e5?text=${name.substring(0,3)}`;
+                    img.alt = `[Imagen de ${name}]`;
+                    img.classList.add('mx-auto');
+                    img.onerror = function() { this.src='https://placehold.co/60x50/cccccc/ffffff?text=Error'; this.alt='[Imagen no disponible]'};
+                    const span = document.createElement('span');
+                    span.textContent = name;
+                    button.appendChild(img);
+                    button.appendChild(span);
+                    applianceButtonsDiv.appendChild(button);
+                }
+            }
+
+            applianceButtonsDiv.addEventListener('click', function(event) {
+                const clickedButton = event.target.closest('.appliance-button');
+                if (!clickedButton) return;
+                const allButtons = applianceButtonsDiv.querySelectorAll('.appliance-button');
+                allButtons.forEach(btn => btn.classList.remove('selected'));
+                clickedButton.classList.add('selected');
+                const wattage = clickedButton.getAttribute('data-wattage');
+                selectedApplianceName = clickedButton.getAttribute('data-name');
+                if (selectedApplianceName === 'Otro') {
+                    powerInput.value = '';
+                    powerInput.readOnly = false;
+                    powerInput.style.backgroundColor = '#fff';
+                } else {
+                    powerInput.value = wattage;
+                    powerInput.readOnly = true;
+                    powerInput.style.backgroundColor = '#f3f4f6';
+                }
+                hideAddError();
+            });
+
+            addBtn.addEventListener('click', function() {
+                hideAddError();
+                clearSessionDataAndContinueButton();
+                const powerW = parseFloat(powerInput.value);
+                const hoursDay = parseFloat(hoursInput.value);
+                const daysMonth = parseInt(daysInput.value);
+                let name = selectedApplianceName;
+                let errorMsg = "";
+                if (isNaN(powerW) || powerW <= 0) { errorMsg = "Ingresa una potencia válida (W)."; }
+                else if (isNaN(hoursDay) || hoursDay < 0 || hoursDay > 24) { errorMsg = "Ingresa horas válidas (0-24)."; }
+                else if (isNaN(daysMonth) || daysMonth <= 0 || daysMonth > 31) { errorMsg = "Ingresa días válidos (1-31)."; }
+                else if (name === '' || name === 'Otro') {
+                    name = prompt("Ingresa un nombre para este aparato:", "Aparato Manual") || `Aparato ${nextItemId + 1}`;
+                    if (!name) return;
+                }
+                if (errorMsg) {
+                    showAddError(errorMsg);
+                    return;
+                }
+                addedAppliances.push({
+                    id: nextItemId++, name: name, powerW: powerW,
+                    hoursDay: hoursDay, daysMonth: daysMonth
+                });
+                renderApplianceList();
+                clearInputFields();
+                resetButtonSelection();
+                calculateTotalBtn.disabled = false;
+                clearTotalResultsAndError();
+            });
+
+            applianceListDiv.addEventListener('click', function(event) {
+                if (event.target.classList.contains('remove-appliance-btn')) {
+                    const idToRemove = parseInt(event.target.getAttribute('data-id'));
+                    addedAppliances = addedAppliances.filter(app => app.id !== idToRemove);
+                    renderApplianceList();
+                    calculateTotalBtn.disabled = addedAppliances.length === 0;
+                    clearTotalResultsAndError();
+                    clearSessionDataAndContinueButton();
+                }
+            });
+
+            calculateTotalBtn.addEventListener('click', function() {
+                hideTotalError();
+                if (addedAppliances.length === 0) {
+                    showTotalError("La lista de electrodomésticos está vacía.");
+                    clearTotalResults();
+                    return;
+                }
+                const priceKwh = parseFloat(priceInput.value);
+                if (isNaN(priceKwh) || priceKwh < 0) {
+                    showTotalError("Ingresa un precio por kWh válido.");
+                    clearTotalResults();
+                    return;
+                }
+                let totalMonthlyKwh = 0;
+                addedAppliances.forEach(app => {
+                    const powerKw = app.powerW / 1000;
+                    totalMonthlyKwh += powerKw * app.hoursDay * app.daysMonth;
+                });
+                const totalDailyKwh = addedAppliances.length > 0 ? totalMonthlyKwh / 30 : 0;
+                const totalMonthlyCost = totalMonthlyKwh * priceKwh;
+                totalDailyKwhSpan.textContent = formatNumber(totalDailyKwh, 3);
+                totalMonthlyKwhSpan.textContent = formatNumber(totalMonthlyKwh, 2);
+                totalMonthlyCostSpan.textContent = formatCurrency(totalMonthlyCost);
+                totalResultsDiv.classList.remove('hidden');
+
+                sessionStorage.setItem('totalDailyKwh', totalDailyKwh);
+                sessionStorage.setItem('totalMonthlyKwh', totalMonthlyKwh);
+                sessionStorage.setItem('appliancesList', JSON.stringify(addedAppliances));
+                showContinueButton('calculadora_dimensionamiento_paneles.html', 'Continuar a Dimensionamiento de Paneles →');
+            });
+
+            function renderApplianceList() {
+                applianceListDiv.innerHTML = '';
+                if (addedAppliances.length === 0) {
+                    applianceListDiv.appendChild(emptyListMsg);
+                    emptyListMsg.classList.remove('hidden');
+                } else {
+                    emptyListMsg.classList.add('hidden');
+                    addedAppliances.forEach(app => {
+                        const div = document.createElement('div');
+                        div.classList.add('appliance-item');
+                        div.innerHTML = `
+                            <span>${app.name} (${app.powerW}W, ${app.hoursDay}h/día, ${app.daysMonth}d/mes)</span>
+                            <button class="remove-appliance-btn" data-id="${app.id}" title="Eliminar">&times;</button>
+                        `;
+                        applianceListDiv.appendChild(div);
+                    });
+                }
+            }
+            
+            function clearInputFields() {
+                powerInput.value = ''; hoursInput.value = '';
+                powerInput.readOnly = false; powerInput.style.backgroundColor = '#fff';
+                selectedApplianceName = '';
+            }
+            function resetButtonSelection() {
+                const allButtons = applianceButtonsDiv.querySelectorAll('.appliance-button');
+                allButtons.forEach(btn => btn.classList.remove('selected'));
+            }
+            function showAddError(message) { addErrorMessageP.textContent = message; addErrorMessageP.classList.remove('hidden'); }
+            function hideAddError() { addErrorMessageP.classList.add('hidden'); }
+            function showTotalError(message) { totalErrorMessageP.textContent = message; totalErrorMessageP.classList.remove('hidden'); }
+            function hideTotalError() { totalErrorMessageP.classList.add('hidden'); }
+            function clearTotalResults() {
+                totalDailyKwhSpan.textContent = '--';
+                totalMonthlyKwhSpan.textContent = '--';
+                totalMonthlyCostSpan.textContent = '--';
+            }
+            function clearTotalResultsAndError() {
+                clearTotalResults(); hideTotalError();
+                totalResultsDiv.classList.add('hidden');
+            }
+            function showContinueButton(nextPage, buttonText) {
+                continueButtonContainer.innerHTML = '';
+                const continueButton = document.createElement('a');
+                continueButton.href = nextPage;
+                continueButton.textContent = buttonText;
+                continueButton.className = 'mt-4 inline-block w-full text-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700';
+                continueButtonContainer.appendChild(continueButton);
+            }
+            function clearSessionDataAndContinueButton() {
+                sessionStorage.removeItem('totalDailyKwh');
+                sessionStorage.removeItem('totalMonthlyKwh');
+                sessionStorage.removeItem('appliancesList');
+                continueButtonContainer.innerHTML = '';
+            }
+
+            // Initial setup calls for the calculator
+            generateApplianceButtons();
+            renderApplianceList();
+            clearTotalResultsAndError();
+        });
+    </script>
+</body>
+</html>
